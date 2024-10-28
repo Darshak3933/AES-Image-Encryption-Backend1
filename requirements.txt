@@ -9,6 +9,7 @@ ipykernel>=6.0,<7
 ipython>=8.0,<9
 jupyter_client>=8.0,<9
 jupyter_core>=5.0,<6
+Flask-CORS>=3.0,<4
 
 # Flask-related dependencies
 blinker>=1.8,<2
