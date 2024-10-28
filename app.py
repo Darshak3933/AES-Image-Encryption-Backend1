@@ -1,4 +1,5 @@
 from flask import Flask, request, render_template, jsonify, send_file
+from flask_cors import CORS
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 from PIL import Image
@@ -6,7 +7,7 @@ import io
 import os
 
 app = Flask(__name__)
-
+CORS(app)  # This enables CORS for all routes
 UPLOAD_FOLDER = './static/images'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
