@@ -10,6 +10,8 @@ app = Flask(__name__)
 CORS(app)  # This enables CORS for all routes
 UPLOAD_FOLDER = './static/images'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+CORS(app, origins=["https://vercel.com/api/toolbar/link/aes-image-encryption-frontend1.vercel.app?via=project-dashboard-alias-list&p=1&page=/"])
+
 
 @app.route('/')
 def index():
