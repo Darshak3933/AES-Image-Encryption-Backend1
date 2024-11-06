@@ -37,7 +37,6 @@ def encrypt():
 
 @app.route('/decrypt', methods=['POST'])
 def decrypt():
-    print(request.files['image'] is None)
     if 'image' not in request.files:
         return jsonify({'error': 'No image uploaded'}), 400
     
