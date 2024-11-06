@@ -62,8 +62,8 @@ def decrypt():
     decrypted_image_path = os.path.join(app.config['UPLOAD_FOLDER'], 'decrypted_image.png')
     decrypted_image.save(decrypted_image_path)
     
-       # Encode the decrypted data to base64 to send back to the frontend
-        decrypted_image = base64.b64encode(decrypted_data).decode('utf-8')
+    # Encode the decrypted data to base64 to send back to the frontend
+    decrypted_image = base64.b64encode(decrypted_data).decode('utf-8')
 
     # Return the decrypted image for download
     return send_file(decrypted_image_path, as_attachment=True)
