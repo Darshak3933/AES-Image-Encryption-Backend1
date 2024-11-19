@@ -1,10 +1,9 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from Crypto.Cipher import AES
-from Crypto.Util.Padding import unpad
 import base64
 import io
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 
 app = Flask(__name__)
 CORS(app)
@@ -57,15 +56,15 @@ def decrypt():
         decrypted_image_bytes = cipher.decrypt(ciphertext)
 
         # Validate and load the decrypted bytes as an image
-        img_byte_arr = io.BytesIO(decrypted_image_bytes)
         try:
+            img_byte_arr = io.BytesIO(decrypted_image_bytes)
             decrypted_image = Image.open(img_byte_arr)
-            decrypted_image.verify()  # Ensure the bytes are a valid image
-        except Exception as e:
+            decrypted_image.verify()  # Ensure the bytes form a valid image
+        except UnidentifiedImageError as e:
             print("Decrypted bytes do not form a valid image:", e)
-            return jsonify({"error": "Decrypted data is not a valid image."}), 400
+            return jsonify({"error": "Decrypted data is not a valid image. Ensure the correct key and file are used."}), 400
 
-        # Convert the decrypted image to base64 for frontend display
+        # Convert the valid image to base64 to send to the frontend
         img_byte_arr.seek(0)
         decrypted_image_base64 = base64.b64encode(img_byte_arr.read()).decode('utf-8')
 
