@@ -51,13 +51,17 @@ def decrypt():
         encrypted_data = base64.b64decode(encrypted_file.read())
 
         # Extract nonce, tag, and ciphertext
-        nonce = encrypted_data[:16]  # First 16 bytes
-        tag = encrypted_data[16:32]  # Next 16 bytes
-        ciphertext = encrypted_data[32:]  # Remaining bytes
+        nonce = encrypted_data[:16]  # First 16 bytes are the nonce
+        tag = encrypted_data[16:32]  # Next 16 bytes are the tag
+        ciphertext = encrypted_data[32:]  # Remaining bytes are the ciphertext
 
         # Decrypt the ciphertext
-        cipher = AES.new(key, AES.MODE_EAX, nonce=nonce)
-        decrypted_image_bytes = cipher.decrypt_and_verify(ciphertext, tag)
+        try:
+            cipher = AES.new(key, AES.MODE_EAX, nonce=nonce)
+            decrypted_image_bytes = cipher.decrypt_and_verify(ciphertext, tag)
+        except ValueError as e:
+            print("Decryption error: MAC check failed. Ensure correct key and encrypted data are used.")
+            return jsonify({"error": "Decryption failed. The key may be incorrect, or the file may be corrupted."}), 400
 
         # Validate and load the decrypted bytes as an image
         try:
@@ -76,7 +80,7 @@ def decrypt():
 
     except Exception as e:
         print("Decryption error:", e)
-        return jsonify({"error": "An error occurred during decryption."}), 500
+        return jsonify({"error": "An unexpected error occurred during decryption."}), 500
 
 if __name__ == "__main__":
     app.run()
