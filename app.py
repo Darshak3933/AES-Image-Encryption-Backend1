@@ -1,7 +1,10 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from Crypto.Cipher import AES
+from Crypto.Util.Padding import unpad
 import base64
+import io
+from PIL import Image
 
 app = Flask(__name__)
 CORS(app)
@@ -9,28 +12,22 @@ CORS(app)
 @app.route('/encrypt', methods=['POST'])
 def encrypt():
     try:
-        # Retrieve the key and image data
         key = request.form.get('key')
         image = request.files.get('image')
 
         if not key or not image:
             return jsonify({"error": "Key and image file are required."}), 400
 
-        # Ensure the key length is 16, 24, or 32 bytes for AES
         if len(key) not in [16, 24, 32]:
             return jsonify({"error": "Invalid key length. Must be 16, 24, or 32 bytes."}), 400
 
         key = key.encode('utf-8')
         image_data = image.read()
 
-        # Encrypt the image data
         cipher = AES.new(key, AES.MODE_EAX)
         ciphertext, tag = cipher.encrypt_and_digest(image_data)
 
-        # Combine nonce (IV) and ciphertext for decryption later
         encrypted_data = cipher.nonce + ciphertext
-
-        # Encode the encrypted data to base64 to send over JSON
         encrypted_image = base64.b64encode(encrypted_data).decode('utf-8')
         return jsonify({"encrypted_image": encrypted_image})
 
@@ -41,29 +38,33 @@ def encrypt():
 @app.route('/decrypt', methods=['POST'])
 def decrypt():
     try:
-        encrypted_file = request.files.get('encrypted_image')  # Match frontend key
+        encrypted_file = request.files.get('encrypted_image')
         key = request.form.get('key')
 
         if not key or not encrypted_file:
             return jsonify({"error": "Key and encrypted image file are required."}), 400
 
-        # Ensure the key length is valid
-        if len(key) not in (16, 24, 32):
+        if len(key) not in [16, 24, 32]:
             return jsonify({"error": "Invalid key length. Must be 16, 24, or 32 bytes."}), 400
 
+        key = key.encode('utf-8')
         encrypted_data = base64.b64decode(encrypted_file.read())
 
-        # Split nonce and ciphertext
-        nonce = encrypted_data[:16]  # Extract nonce
+        nonce = encrypted_data[:16]  # Extract nonce (IV)
         ciphertext = encrypted_data[16:]  # Extract ciphertext
 
-        # Decrypt the image
-        cipher = AES.new(key.encode(), AES.MODE_EAX, nonce=nonce)
+        cipher = AES.new(key, AES.MODE_EAX, nonce=nonce)
         decrypted_image_bytes = cipher.decrypt(ciphertext)
 
-        # Encode the decrypted data to base64 to send back to the frontend
-        decrypted_image = base64.b64encode(decrypted_image_bytes).decode('utf-8')
-        return jsonify({"decrypted_image": decrypted_image})
+        # Convert decrypted bytes back into an image
+        decrypted_image = Image.open(io.BytesIO(decrypted_image_bytes))
+
+        # Convert image to base64 to send to the frontend
+        img_byte_arr = io.BytesIO()
+        decrypted_image.save(img_byte_arr, format='PNG')
+        decrypted_image_base64 = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
+
+        return jsonify({"decrypted_image": decrypted_image_base64})
 
     except Exception as e:
         print("Decryption error:", e)
