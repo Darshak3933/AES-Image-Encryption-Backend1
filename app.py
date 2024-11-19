@@ -56,13 +56,18 @@ def decrypt():
         cipher = AES.new(key, AES.MODE_EAX, nonce=nonce)
         decrypted_image_bytes = cipher.decrypt(ciphertext)
 
-        # Convert decrypted bytes back into an image
-        decrypted_image = Image.open(io.BytesIO(decrypted_image_bytes))
+        # Validate and load the decrypted bytes as an image
+        img_byte_arr = io.BytesIO(decrypted_image_bytes)
+        try:
+            decrypted_image = Image.open(img_byte_arr)
+            decrypted_image.verify()  # Ensure the bytes are a valid image
+        except Exception as e:
+            print("Decrypted bytes do not form a valid image:", e)
+            return jsonify({"error": "Decrypted data is not a valid image."}), 400
 
-        # Convert image to base64 to send to the frontend
-        img_byte_arr = io.BytesIO()
-        decrypted_image.save(img_byte_arr, format='PNG')
-        decrypted_image_base64 = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
+        # Convert the decrypted image to base64 for frontend display
+        img_byte_arr.seek(0)
+        decrypted_image_base64 = base64.b64encode(img_byte_arr.read()).decode('utf-8')
 
         return jsonify({"decrypted_image": decrypted_image_base64})
 
