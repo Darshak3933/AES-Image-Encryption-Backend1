@@ -26,7 +26,8 @@ def encrypt():
         cipher = AES.new(key, AES.MODE_EAX)
         ciphertext, tag = cipher.encrypt_and_digest(image_data)
 
-        encrypted_data = cipher.nonce + ciphertext
+        # Combine nonce, tag, and ciphertext
+        encrypted_data = cipher.nonce + tag + ciphertext
         encrypted_image = base64.b64encode(encrypted_data).decode('utf-8')
         return jsonify({"encrypted_image": encrypted_image})
 
@@ -49,11 +50,14 @@ def decrypt():
         key = key.encode('utf-8')
         encrypted_data = base64.b64decode(encrypted_file.read())
 
-        nonce = encrypted_data[:16]  # Extract nonce (IV)
-        ciphertext = encrypted_data[16:]  # Extract ciphertext
+        # Extract nonce, tag, and ciphertext
+        nonce = encrypted_data[:16]  # First 16 bytes
+        tag = encrypted_data[16:32]  # Next 16 bytes
+        ciphertext = encrypted_data[32:]  # Remaining bytes
 
+        # Decrypt the ciphertext
         cipher = AES.new(key, AES.MODE_EAX, nonce=nonce)
-        decrypted_image_bytes = cipher.decrypt(ciphertext)
+        decrypted_image_bytes = cipher.decrypt_and_verify(ciphertext, tag)
 
         # Validate and load the decrypted bytes as an image
         try:
@@ -64,7 +68,7 @@ def decrypt():
             print("Decrypted bytes do not form a valid image:", e)
             return jsonify({"error": "Decrypted data is not a valid image. Ensure the correct key and file are used."}), 400
 
-        # Convert the valid image to base64 to send to the frontend
+        # Convert the valid image to base64 for frontend display
         img_byte_arr.seek(0)
         decrypted_image_base64 = base64.b64encode(img_byte_arr.read()).decode('utf-8')
 
