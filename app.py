@@ -14,28 +14,21 @@ def encrypt():
         key = request.form.get('key')
         image = request.files.get('image')
 
-        # Validate key and image
         if not key or not image:
             return jsonify({"error": "Key and image file are required."}), 400
 
-        # Validate key length
         if len(key) not in [16, 24, 32]:
             return jsonify({"error": "Invalid key length. Must be 16, 24, or 32 bytes."}), 400
 
-        # Convert key to bytes
         key = key.encode('utf-8')
-
-        # Read image data
         image_data = image.read()
 
-        # Encrypt the image data
         cipher = AES.new(key, AES.MODE_EAX)
         ciphertext, tag = cipher.encrypt_and_digest(image_data)
 
         # Combine nonce, tag, and ciphertext
         encrypted_data = cipher.nonce + tag + ciphertext
         encrypted_image = base64.b64encode(encrypted_data).decode('utf-8')
-
         return jsonify({"encrypted_image": encrypted_image})
 
     except Exception as e:
@@ -48,18 +41,13 @@ def decrypt():
         encrypted_file = request.files.get('encrypted_image')
         key = request.form.get('key')
 
-        # Validate key and encrypted file
         if not key or not encrypted_file:
             return jsonify({"error": "Key and encrypted image file are required."}), 400
 
-        # Validate key length
         if len(key) not in [16, 24, 32]:
             return jsonify({"error": "Invalid key length. Must be 16, 24, or 32 bytes."}), 400
 
-        # Convert key to bytes
         key = key.encode('utf-8')
-
-        # Read and decode the encrypted data
         encrypted_data = base64.b64decode(encrypted_file.read())
 
         # Extract nonce, tag, and ciphertext
@@ -95,4 +83,4 @@ def decrypt():
         return jsonify({"error": "An unexpected error occurred during decryption."}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
