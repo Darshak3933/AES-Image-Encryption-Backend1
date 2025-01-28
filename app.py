@@ -23,23 +23,17 @@ def encrypt():
         key = key.encode('utf-8')
         image_data = image.read()
 
-        # Perform AES encryption
         cipher = AES.new(key, AES.MODE_EAX)
         ciphertext, tag = cipher.encrypt_and_digest(image_data)
 
         # Combine nonce, tag, and ciphertext
         encrypted_data = cipher.nonce + tag + ciphertext
         encrypted_image = base64.b64encode(encrypted_data).decode('utf-8')
-
-        # Log encryption details
-        print(f"Encryption successful. Nonce: {cipher.nonce.hex()}, Tag: {tag.hex()}")
-
         return jsonify({"encrypted_image": encrypted_image})
 
     except Exception as e:
         print("Encryption error:", e)
         return jsonify({"error": "An error occurred during encryption."}), 500
-
 
 @app.route('/decrypt', methods=['POST'])
 def decrypt():
@@ -60,9 +54,6 @@ def decrypt():
         nonce = encrypted_data[:16]  # First 16 bytes are the nonce
         tag = encrypted_data[16:32]  # Next 16 bytes are the tag
         ciphertext = encrypted_data[32:]  # Remaining bytes are the ciphertext
-
-        # Log decryption details
-        print(f"Decryption started. Nonce: {nonce.hex()}, Tag: {tag.hex()}, Ciphertext length: {len(ciphertext)}")
 
         # Decrypt the ciphertext
         try:
@@ -85,7 +76,6 @@ def decrypt():
         img_byte_arr.seek(0)
         decrypted_image_base64 = base64.b64encode(img_byte_arr.read()).decode('utf-8')
 
-        print("Decryption successful.")
         return jsonify({"decrypted_image": decrypted_image_base64})
 
     except Exception as e:
