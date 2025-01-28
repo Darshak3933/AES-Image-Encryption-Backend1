@@ -31,8 +31,8 @@ def encrypt():
         encrypted_data = cipher.nonce + tag + ciphertext
         encrypted_image = base64.b64encode(encrypted_data).decode('utf-8')
 
-        # Log encryption details (for debugging)
-        print(f"Encryption successful. Nonce: {cipher.nonce}, Tag: {tag}, Ciphertext length: {len(ciphertext)}")
+        # Log encryption details
+        print(f"Encryption successful. Nonce: {cipher.nonce.hex()}, Tag: {tag.hex()}")
 
         return jsonify({"encrypted_image": encrypted_image})
 
@@ -61,8 +61,8 @@ def decrypt():
         tag = encrypted_data[16:32]  # Next 16 bytes are the tag
         ciphertext = encrypted_data[32:]  # Remaining bytes are the ciphertext
 
-        # Log decryption details (for debugging)
-        print(f"Decryption started. Nonce: {nonce}, Tag: {tag}, Ciphertext length: {len(ciphertext)}")
+        # Log decryption details
+        print(f"Decryption started. Nonce: {nonce.hex()}, Tag: {tag.hex()}, Ciphertext length: {len(ciphertext)}")
 
         # Decrypt the ciphertext
         try:
